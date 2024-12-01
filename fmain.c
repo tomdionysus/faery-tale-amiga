@@ -1235,7 +1235,7 @@ no_intro:
 	placard_text(19);
 	handler_data.laydown = handler_data.pickup = 0;
 	k = TRUE;
-	if (copy_protect_junk()==0) goto quit_all;
+	//if (copy_protect_junk()==0) goto quit_all;
 	Delay(20);
 	
 	ri_page1.RxOffset = ri_page2.RxOffset =

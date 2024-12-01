@@ -51,6 +51,15 @@ cd dh0:faery
 make
 ```
 
+### Running
+
+The executable `fmain` must be started with the current directory set to the `game` folder:
+
+```sh
+cd dh0:faery/game
+/fmain
+```
+
 ## Copyright status
 
 Under U.S. Copyright law, a creator may reclaim the copyright of their work after 35 years,
