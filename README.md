@@ -15,10 +15,19 @@ The code is primarily written in Aztec C, with some 68000 assembly.
 I don't know whether it would be possible to actually get the game running on some other platform;
 but even so the code may have some historical interest.
 
-## Building The Game
+## 2024 Modifications
+In late 2024, after @viridia [open-sourced the game code](https://www.reddit.com/r/retrogamedev/comments/1gs2xzu/source_code_for_the_original_faery_tale_adventure/), 
+[Troy Tarrant](https://github.com/ttarrant) and [Tom Cully](https://github.com/tomdionysus) created 
+this fork to hack on the game using emulated FS-UAE Amigas.
+
+Our modifications to the orginal code are listed in the [CHANGELOG](CHANGELOG.md).
+
+As of 1st Dec 2024, this branch builds a working game with copy protection removed:
+
+### Building The Game
 
 This guide assumes building under Aztec C68k/Amiga 5.2a on an Amiga A500 Kickstart 1.3 with 512k
-Chip RAM and 512k Slow Ram (FS-UAE).
+Chip RAM and 512k Slow Ram (FS-UAE) and a 20MB hard disk (dh0).
 
 * Aztec C is installed at `dh0:Aztec`
 * The game code is in `dh0:faery`
@@ -26,10 +35,31 @@ Chip RAM and 512k Slow Ram (FS-UAE).
 ### Aztec C Toolchain
 
 Once Aztec C is installed, various path and environment variables need to be set up. Assuming a 
-standard installation in `dh0:Aztec`, there is a script supplied to do this:
+standard installation in `dh0:Aztec`, there is a script supplied to do this, which appears to have
+a bad include path for assembler. You should modify the `dh0:Aztec/aztec.sh` file as follows:
+
+```
+path "DH0:Aztec/bin"
+mset CCTEMP=ram:
+mset "CLIB=DH0:Aztec/lib/libs"
+mset "INCLUDE=DH0:Aztec/include;DH0:Aztec/incl_asm
+```
+
+Then, execute it to setup your paths:
 
 ```sh
 execute dh0:Aztec/aztec.sh
+```
+
+To save time, you can add this line to the end of your `s/Startup-Sequence` file to set up the 
+paths on boot:
+
+```
+...rest of file...
+
+execute dh0:aztec/aztec.sh
+LoadWB delay  ;wait for inhibit to end before continuing
+endcli >NIL:
 ```
 
 ### Precompiling `amiga39.pre`
