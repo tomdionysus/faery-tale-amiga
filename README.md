@@ -51,6 +51,10 @@ cd dh0:faery
 make
 ```
 
+**NOTE:** If running under an emulator (FS-UAE, WinUAE) compliation time can be dramatically
+reduced (from 30m to a few seconds) by compiling on an Amiga equipped with a 68030 CPU or 
+higher.
+
 ### Running
 
 The executable `fmain` must be started with the current directory set to the `game` folder:

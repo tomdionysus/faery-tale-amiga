@@ -238,7 +238,7 @@ _titletext	dc.b	XY,(160-26*4)/2,33,$22,"The Faery Tale Adventure",$22
 			dc.b	XY,(160-2*4)/2,90,"by"
 			dc.b	XY,(160-12*4)/2,101,"David Joiner"
 			dc.b	XY,(160-30*4)/2,150,"Copyright 1986 MicroIllusions "
-			dc.b	XY,(160-32*4)/2,170,"(2024 Tom Cully & Troy Tarrant)"
+			dc.b	XY,(160-32*4)/2,188,"(2024 Tom Cully & Troy Tarrant)"
 ;_titletext	dc.b	XY,168/2,33,$22,"The Faery Tale Adventure",$22
 ;			dc.b	XY,153/2,74,"Animation, Programming & Music"
 ;			dc.b	XY,292/2,90,"by"

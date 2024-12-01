@@ -1218,26 +1218,19 @@ no_intro:
 
 	LoadRGB4(&vp_text,blackcolors,32);
 	screen_size(156);
-	SetRGB4(&vp_page,0,0,0,3);
+	SetRGB4(&vp_page,0,0,0,0);
 	load_track_range(896,24,shadow_mem,0);
 	WaitLastDiskIO(); /* WaitIO((struct IORequest *)lastreq); */
 	InvalidLastDiskIO(); /* lastreq->iotd_Req.io_Command = CMD_INVALID; */
 
-	SetRGB4(&vp_page,0,0,0,6);
 	unpackbrush("hiscreen",bm_text,0,0);
 
+	// /* Copy Protection Screen Removed Here */
 	SetRGB4(&vp_page,1,15,15,15);
-
 	rp = &rp_map;
 	rp_map.BitMap =  fp_drawing->ri_page->BitMap;
 	stillscreen();
-	SetAPen(rp,1);
-	placard_text(19);
-	handler_data.laydown = handler_data.pickup = 0;
-	k = TRUE;
-	//if (copy_protect_junk()==0) goto quit_all;
-	Delay(20);
-	
+
 	ri_page1.RxOffset = ri_page2.RxOffset =
 		ri_page1.RyOffset = ri_page2.RyOffset = 0;
 
