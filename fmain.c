@@ -1,6 +1,14 @@
 /* fmain.c - created Aug 86 by Talin - The Faerie Tale Adventure */
 
 #include "ftale.h"
+#include "faery_state.h"
+
+/* Library Globals */
+struct GfxBase *GfxBase;
+struct Library *LayersBase;
+
+/* Game State */
+struct FaeryState _fstate, *fstate = &_fstate;
 
 /****** this section defines the variables used to communicate with the 
 		graphics routines */
@@ -15,7 +23,7 @@
 #define RAST_HEIGHT	200
 #define TEXT_HEIGHT	57
 
-struct View v, *oldview;
+struct View v;
 struct ViewPort vp_page, vp_text, vp_title, *vp;
 
 /* add name of setfig for generic messages?? */
@@ -454,8 +462,6 @@ LONG i;
 SHORT j,k,n;
 
 extern struct ColorMap *GetColorMap();
-struct GfxBase *GfxBase;
-struct Library *LayersBase;
 
 UBYTE *nhinor, *nhivar;
 extern UBYTE hinor, hivar;
@@ -715,13 +721,8 @@ struct in_work handler_data;
 
 struct BitMap *wb_bmap;
 struct Layer_Info *li, /* *NewLayerInfo() */ ;
-struct Process *thistask /* , *FindTask() */ ;
 BPTR origDir;
 int trapper();
-
-struct IOAudio *ioaudio;
-struct MsgPort *audioport;
-BOOL			audio_open;
 
 struct BitMap work_bm;
 
@@ -734,7 +735,7 @@ open_all()
 	if ((GfxBase = (struct GfxBase *)OpenLibrary("graphics.library",0)) == NULL) return 2;
 	if ((LayersBase = (struct Library *)OpenLibrary("layers.library",0)) == NULL) return 2;
 	SETFN(AL_GBASE);		/* opened the graphics library */
-	oldview = GfxBase->ActiView;
+	fstate->oldview = GfxBase->ActiView;
 
 	if (!MakeBitMap(&work_bm,2,640,200)) return 2;
 
@@ -787,9 +788,9 @@ open_all()
 	handler_data.pbase = 0;
 	if (add_device() == FALSE) return 4;
 
-	thistask = (struct Process *)FindTask(0);
-	thistask->pr_WindowPtr = (APTR)-1;
-	thistask->pr_Task.tc_TrapCode = (APTR)trapper;
+	fstate->thistask = (struct Process *)FindTask(0);
+	fstate->thistask->pr_WindowPtr = (APTR)-1;
+	fstate->thistask->pr_Task.tc_TrapCode = (APTR)trapper;
 	/* set trap handler */
 
 	SETFN(AL_HANDLE);
@@ -886,24 +887,24 @@ open_all()
 	vp_text.RasInfo = &ri_text;
 	MakeVPort( &v, &vp_text );
 
-	if (audioport = (struct MsgPort *)CreatePort(NULL,0))
+	if (fstate->audioport = (struct MsgPort *)CreatePort(NULL,0))
 	{
-		if (ioaudio = (struct IOAudio *)CreateExtIO(audioport,sizeof *ioaudio))
+		if (fstate->ioaudio = (struct IOAudio *)CreateExtIO(fstate->audioport,sizeof *fstate->ioaudio))
 		{	UBYTE	data = 0x0f;
 
-			ioaudio->ioa_Data = &data;
-			ioaudio->ioa_Length = 1;
+			fstate->ioaudio->ioa_Data = &data;
+			fstate->ioaudio->ioa_Length = 1;
 
-			if (!OpenDevice("audio.device", 0L, &ioaudio->ioa_Request,0L))
+			if (!OpenDevice("audio.device", 0L, &fstate->ioaudio->ioa_Request,0L))
 			{
-				ioaudio->ioa_Request.io_Command = CMD_RESET;
-				ioaudio->ioa_Request.io_Flags = IOF_QUICK;
-				BeginIO(&ioaudio->ioa_Request);
+				fstate->ioaudio->ioa_Request.io_Command = CMD_RESET;
+				fstate->ioaudio->ioa_Request.io_Flags = IOF_QUICK;
+				BeginIO(&fstate->ioaudio->ioa_Request);
 
-				if ( !(ioaudio->ioa_Request.io_Flags & IOF_QUICK) )
-					WaitIO(&ioaudio->ioa_Request);
+				if ( !(fstate->ioaudio->ioa_Request.io_Flags & IOF_QUICK) )
+					WaitIO(&fstate->ioaudio->ioa_Request);
 
-				audio_open = 1;
+				fstate->audio_open = 1;
 			}
 		}
 	}
@@ -961,7 +962,7 @@ close_all()
 	free_chip(sprite_data,_sprite_data,88);
 	free_chip(nhinor,&hinor,(16*16));
 	free_chip(nhivar,&hivar,(16*16));
-	LoadView(oldview);
+	LoadView(fstate->oldview);
 	FreeVPortCopLists(&vp_page);
 	FreeVPortCopLists(&vp_text);
 	FreeCprList(fp_page1.savecop);
@@ -978,9 +979,9 @@ close_all()
 			FreeRaster(bm_page2->Planes[i],PHANTA_WIDTH,RAST_HEIGHT);
 
 
-	if (audio_open) CloseDevice(&ioaudio->ioa_Request);
-	if (ioaudio) DeleteExtIO(&ioaudio->ioa_Request);
-	if (audioport) DeletePort(audioport);
+	if (fstate->audio_open) CloseDevice(&fstate->ioaudio->ioa_Request);
+	if (fstate->ioaudio) DeleteExtIO(&fstate->ioaudio->ioa_Request);
+	if (fstate->audioport) DeletePort(fstate->audioport);
 
 	if (TSTFN(AL_HANDLE)) wrap_device();
 	if (TSTFN(AL_FONT)) { UnLoadSeg(seg); CloseFont(tfont); }
