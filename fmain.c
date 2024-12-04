@@ -638,9 +638,6 @@ extern short minimap[114];
 #define MAXCOORD (16*16*128)
 #define MAXMASK	 MAXCOORD - 1
 
-#define	SETFN(n)	openflags |= n
-#define TSTFN(n)	openflags & n
-
 #define	QPLAN_SZ	4096			/* 1 plane of 64 chars */
 #define IPLAN_SZ	16384			/* 1 plane of 256 chars */
 #define	IMAGE_SZ	(IPLAN_SZ * 5)	/* 5 planes of 256 chars - 81K */
@@ -677,7 +674,6 @@ short new_wave[] =
 	0x0202, 0x0101, 0x0103, 0x0004, 0x0504, 
 	0x0100, 0x0500 };
 
-UWORD	openflags;
 PLANEPTR	*planes;
 
 unsigned char *mask_buffer, *shapedata;
@@ -701,24 +697,6 @@ struct in_work handler_data;
 
 /* this function opens everything that needs to be opened */
 
-/* allocation definitions */
-
-#define	AL_BMAP		0x0001
-#define	AL_GBASE	0x0002
-#define	AL_HANDLE	0x0004
-#define	AL_MUSIC	0x0008
-#define	AL_IMAGE	0x0010
-#define	AL_SECTOR	0x0020
-#define	AL_MASK		0x0040
-#define	AL_SHAPE	0x0080
-#define	AL_SHADOW	0x0100
-#define	AL_FONT		0x0200
-#define	AL_SAMPLE	0x0400
-#define AL_PORT		0x0800
-#define AL_IOREQ	0x1000
-#define AL_TDISK	0x2000
-#define AL_TERR		0x4000
-
 struct BitMap *wb_bmap;
 struct Layer_Info *li, /* *NewLayerInfo() */ ;
 BPTR origDir;
@@ -730,7 +708,7 @@ open_all()
 {	register long i;
 	long file;
 
-	openflags = 0;
+	CLRFN();
 
 	if ((GfxBase = (struct GfxBase *)OpenLibrary("graphics.library",0)) == NULL) return 2;
 	if ((LayersBase = (struct Library *)OpenLibrary("layers.library",0)) == NULL) return 2;
@@ -912,8 +890,6 @@ open_all()
 	if ((wavmem = (unsigned char *)AllocMem(VOICE_SZ,MEMF_CHIP)) == NULL) return 16;
 	if ((scoremem = (unsigned char *)AllocMem(SCORE_SZ,0)) == NULL) return 17;
 	volmem = wavmem + S_WAVBUF;
-	init_music(new_wave,wavmem,volmem);
-	SETFN(AL_MUSIC);
 
 	if ((image_mem = (unsigned char *)AllocMem(IMAGE_SZ,MEMF_CHIP)) == NULL) return 6;
 	SETFN(AL_IMAGE);
@@ -935,6 +911,9 @@ open_all()
 		Read(file,volmem,S_VOLBUF);
 		Close(file);
 	}
+
+	init_music(new_wave,wavmem,volmem);
+	SETFN(AL_MUSIC);
 
 	bm_scroll.Planes[0] = bm_text->Planes[0];
 
@@ -999,7 +978,8 @@ close_all()
 	if (TSTFN(AL_BMAP)) UnMakeBitMap(&work_bm);
 	DisposeLayerInfo(li);
 	FreeSprite(0);
-	openflags = 0;
+
+	CLRFN();
 
 	if (origDir) CurrentDir(origDir);
 
